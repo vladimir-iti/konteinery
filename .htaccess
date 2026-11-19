@@ -1,0 +1,30 @@
+# Настройки Apache (Beget). Сайт — одна статичная страница.
+AddDefaultCharset UTF-8
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  # HTTPS и адрес без www (на Beget TLS часто снимает прокси — проверяем и заголовок).
+  RewriteCond %{HTTPS} !=on
+  RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+  RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+  RewriteRule ^ https://%1%{REQUEST_URI} [R=301,L]
+  # Служебное не отдаём, даже если случайно залили.
+  RewriteRule ^(img/src|tools|\.claude)(/|$) - [F,L]
+  RewriteRule ^README\.md$ - [F,L]
+</IfModule>
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/plain application/javascript text/javascript image/svg+xml
+</IfModule>
+
+# Хэшей в ссылках на CSS/JS нет, поэтому их кэш короткий — правки видны в течение часа.
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType text/html              "access plus 0 seconds"
+  ExpiresByType text/css               "access plus 1 hour"
+  ExpiresByType application/javascript "access plus 1 hour"
+  ExpiresByType text/javascript        "access plus 1 hour"
+  ExpiresByType image/webp             "access plus 1 month"
+  ExpiresByType font/woff2             "access plus 1 year"
+</IfModule>
